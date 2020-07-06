@@ -35,18 +35,18 @@ def get_key(val, my_dict):
     return "key doesn't exist"
 
 def visualize_dataset(final_df, cluster_insights_df, cluster_names_dict):
-    st.title('Raw Data Insights')
     # 1. Average basket price per customer in each cluster
     st.header('Avg. Basket Price per customer in each cluster:')
+    min_monetary = cluster_insights_df.loc['Monetary'].min()
     fig = go.Figure(
         data=[
             go.Scatter(
-                x = [1,2,3,4],
+                x = [get_key(i, cluster_names_dict) for i in cluster_insights_df.columns],
                 y = [cluster_insights_df.loc['Monetary',i] for i in cluster_insights_df.columns],
                 mode = 'markers',
                 marker = dict(
                     color = [236, 189, 648, 135],
-                    size = [58, 42, 144, 30],
+                    size = [round((cluster_insights_df.loc['Monetary',i]/min_monetary)*20) for i in cluster_insights_df.columns],
                     showscale = True
                 )
             )
@@ -57,15 +57,16 @@ def visualize_dataset(final_df, cluster_insights_df, cluster_names_dict):
 
     # 2. Average frequency per customer in each cluster
     st.header('Avg. Frequency per customer in each cluster:')
+    min_freq = cluster_insights_df.loc['Frequency'].min()
     fig = go.Figure(
         data=[
             go.Scatter(
-                x = [1,2,3,4],
+                x = [get_key(i, cluster_names_dict) for i in cluster_insights_df.columns],
                 y = [cluster_insights_df.loc['Frequency',i] for i in cluster_insights_df.columns],
                 mode = 'markers',
                 marker = dict(
                     color = [236, 189, 648, 135],
-                    size = [58, 42, 144, 30],
+                    size = [round((cluster_insights_df.loc['Frequency',i]/min_freq)*20) for i in cluster_insights_df.columns],
                     showscale = True
                 )
             )
@@ -115,7 +116,6 @@ def visualize_dataset(final_df, cluster_insights_df, cluster_names_dict):
     #4. End orders per month
 
 def visualize_customer(clean_df, final_df, cust_id, cluster_names_dict):
-    st.title('Customer Insights')
     # 1. Customer cluster info
     cust_clust = list(final_df[final_df['CustomerID'] == int(float(cust_id))]['cluster'])[0]
     st.info('Customer category -> {}'.format(get_key(cust_clust, cluster_names_dict)))
@@ -133,10 +133,10 @@ def visualize_customer(clean_df, final_df, cust_id, cluster_names_dict):
     temp.index.name = 'Features'
     temp.reset_index(inplace=True)
     st.table(temp)
+    st.info('**Note:** _Quantity_, _QuantityCanceled_, _CancellationRate_ depict the _total_ values for each customer.')
     # 3. End customer Insights
 
 def visualize_cluster(clean_df, final_df, selected_cluster, cluster_insights_df, cluster_names_dict):
-    st.title('Cluster Insights')
     cluster_no = cluster_names_dict[selected_cluster]
     cust = list(final_df[final_df['cluster'] == cluster_no]['CustomerID'])
     ith_cluster = clean_df[clean_df['CustomerID'].isin(cust)]
@@ -161,11 +161,21 @@ def visualize_cluster(clean_df, final_df, selected_cluster, cluster_insights_df,
     temp.index.name = 'Features'
     temp.reset_index(inplace=True)
     st.table(temp)
-    st.warning('Features Explanation')
-    st.write(pd.DataFrame({
-        'Columns': ['No of Customer', 'RFMScore', 'Rest'],
-        'Calculation Insights': ['Count', 'Median', 'Mean(Average)']
-        }))
+    st.markdown("\
+    <div class='markdown-text-container mb-3'>\
+        <h3 class='text-center pt-0 mt-0 text-pink'><u>Feature explanation</u></h3>\
+        <table class='table table-bordered table-hover table-danger border-pink w-75 mx-auto pt-0'>\
+            <thead class='border-pink text-pink'>\
+                <tr><th class=''>Features / Variables</th><th class=''>Calculation Criteria</th></tr>\
+            </thead>\
+            <tbody>\
+                <tr><th scope='row'>No of Customers</th><td>Count</td></tr>\
+                <tr><th scope='row'>RFMScore</th><td>Median</td></tr>\
+                <tr><th scope='row'>Others</th><td>Mean(Average)</td></tr>\
+            </tbody>\
+        </table>\
+    </div>", unsafe_allow_html=True)
+    
     # 2. End cluster columns insights dataframe
 
     #3. Top 10 brought product
@@ -263,6 +273,15 @@ if check_dataset() == False:
 #================================================ End checking and loading dataset files ==============================================
 
 #========================================================= UI template ================================================================
+# Custom styling rules
+st.markdown("\
+    <style>\
+        .text-pink{color: rgb(246, 51, 102);}\
+        .border-pink{border: 2px solid rgb(246, 51, 102);}\
+        .section-sep {line-height: 1em; position: relative; outline: 0; outline: none; border: none !important; color: black; text-align: center; height: 1.4em; opacity: .8;}\
+        .section-sep:before {content: ''; background: -webkit-gradient(linear, left top, right top, from(transparent), color-stop(#f63366, #fffd80), to(transparent)); background: linear-gradient(to right, transparent, #f63366, transparent); position: absolute; left: 0; top: 50%; width: 100%; height: 4px;}\
+        .section-sep:after {content: attr(data-content); position: relative; display: inline-block; color: black; padding: 0 .5em; line-height: 1.5em; color: #818078; background-color: #fff;}\
+    </style>", unsafe_allow_html=True)
 # Loading dataset files
 clean_df = pd.read_csv('./dataset/clean_data.csv', encoding='unicode_escape')
 final_df = pd.read_csv('./dataset/final_data.csv', encoding='unicode_escape')
@@ -272,33 +291,46 @@ st.sidebar.success('Data loading... Done!')
 
 # [A] Analyse Dataset
 if st.sidebar.checkbox('Raw Data Insights', key='raw_data_toggle', value='True'):
+    # Title
+    st.markdown("<h1 class='text-pink'>Raw Data Insights</h1>", unsafe_allow_html=True)
     visualize_dataset(final_df, cluster_insights_df, cluster_names_dict)
+    st.markdown("<hr class='section-sep' data-content='End of Raw Data Insights'/>", unsafe_allow_html=True)
 # [A] End Analyse Dataset
 
 # [B] Analyse Customer
 if st.sidebar.checkbox('Customer Insights', key='customer_toggle'):
+    # Title
+    st.markdown("<h1 class='text-pink'>Customer Insights</h1>", unsafe_allow_html=True)
     cust_id = st.text_input('Customer ID')
     if check_input( cust_id ) and ( int(float(cust_id)) in set(final_df['CustomerID']) ):
         visualize_customer(clean_df, final_df, cust_id, cluster_names_dict)
     else:
         if cust_id != '':
             st.error('Invalid Customer ID!')
+    st.markdown("<hr class='section-sep' data-content='End of Customer Insights'/>", unsafe_allow_html=True)
 # [B] End Analyse Customer
 
 # [C] Analyse Clusters
 if st.sidebar.checkbox('Cluster Insights', key='cluster_toggle'):
     selected_cluster = st.sidebar.selectbox('Select Cluster', ('Loyal', 'Bulls eye', 'Promising', 'Need attention'))
+    # Title
+    st.markdown("<h1 class='text-pink'>Cluster Insights</h1>", unsafe_allow_html=True)
     visualize_cluster(clean_df, final_df, selected_cluster, cluster_insights_df, cluster_names_dict)
+    # End
+    st.markdown("<hr class='section-sep' data-content='End of Cluster Insights'/>", unsafe_allow_html=True)
 # [C] End Analyse Clusters
 
 # [D] Upload updated / new Data
 if st.sidebar.checkbox('Upload new data', key='new_upload_toggle'):
-    st.title('Upload new data')
+    # Title
+    st.markdown("<h1 class='text-pink'>Upload New Data</h1>", unsafe_allow_html=True)
     update_data = st.file_uploader("Choose a CSV file", encoding="unicode_escape", type="csv", key="update_dataset")
     if update_data is not None:
         new_data = pd.read_csv(update_data)
         data_process_state = st.info('Processing data...')
         clean_df, final_df = preprocess_Data(new_data, 'update')
         cluster_insights_df, cluster_names_dict = analyse_clusters(final_df)
+    # End    
+    st.markdown("<hr class='section-sep' data-content='End of Upload Data Section'/>", unsafe_allow_html=True)
 # [D] End Upload updated / new Data
 #====================================================== End of UI template ============================================================
