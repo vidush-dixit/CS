@@ -259,6 +259,7 @@ if check_dataset() == False:
         uploaded_file = st.file_uploader("Choose a CSV file", encoding="unicode_escape", type="csv", key="create_dataset")
         if uploaded_file is not None:
             new_data = pd.read_csv(uploaded_file)
+            new_data.to_csv('data.csv', index=False)
      
     # Processing uploaded / found dataset file
     data_process_state = st.info('Processing data...')
@@ -282,6 +283,8 @@ st.markdown("\
         .section-sep:before {content: ''; background: -webkit-gradient(linear, left top, right top, from(transparent), color-stop(#f63366, #fffd80), to(transparent)); background: linear-gradient(to right, transparent, #f63366, transparent); position: absolute; left: 0; top: 50%; width: 100%; height: 4px;}\
         .section-sep:after {content: attr(data-content); position: relative; display: inline-block; color: black; padding: 0 .5em; line-height: 1.5em; color: #818078; background-color: #fff;}\
     </style>", unsafe_allow_html=True)
+# End custom styling rules
+
 # Loading dataset files
 clean_df = pd.read_csv('./dataset/clean_data.csv', encoding='unicode_escape')
 final_df = pd.read_csv('./dataset/final_data.csv', encoding='unicode_escape')
@@ -327,9 +330,24 @@ if st.sidebar.checkbox('Upload new data', key='new_upload_toggle'):
     update_data = st.file_uploader("Choose a CSV file", encoding="unicode_escape", type="csv", key="update_dataset")
     if update_data is not None:
         new_data = pd.read_csv(update_data)
+        # Processing uploaded / found dataset file
         data_process_state = st.info('Processing data...')
+        # updating loaded dataset
         clean_df, final_df = preprocess_Data(new_data, 'update')
         cluster_insights_df, cluster_names_dict = analyse_clusters(final_df)
+        # End processing dataset files
+        # Saving processed files
+        data_process_state.info('Saving processed data...')
+        # 1. Updating Raw Data
+        raw_data_old = pd.read_csv('../dataset/data.csv')
+        raw_data_old = pd.concat([raw_data_old, new_data], axis=0)
+        raw_data_old.csv('./dataset/data.csv', index=False)
+        # 2. Updating Clean Data
+        clean_df.to_csv("./dataset/clean_data.csv", index=False)
+        # 3. Updating Final Data
+        final_df.to_csv("./dataset/final_data.csv", index=False)
+        data_process_state.info('Saving processed data...done')
+        # End saving processed files
     # End    
     st.markdown("<hr class='section-sep' data-content='End of Upload Data Section'/>", unsafe_allow_html=True)
 # [D] End Upload updated / new Data
