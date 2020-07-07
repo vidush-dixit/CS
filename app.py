@@ -37,7 +37,7 @@ def get_key(val, my_dict):
 def check_dataset():
     # If folder doesn't exist, then create it.
     if not path.exists('dataset'):
-        makedirs('dataset')
+        makedirs('dataset', exist_ok=True)
 
     if path.exists("./dataset/clean_data.csv") and path.exists("./dataset/final_data.csv"):
         return True
