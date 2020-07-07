@@ -38,7 +38,6 @@ def check_dataset():
     # If folder doesn't exist, then create it.
     if not path.exists('dataset'):
         makedirs('dataset')
-        return False
 
     if path.exists("./dataset/clean_data.csv") and path.exists("./dataset/final_data.csv"):
         return True
