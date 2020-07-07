@@ -35,10 +35,6 @@ def get_key(val, my_dict):
 # Check if dataset is present or not
 @st.cache
 def check_dataset():
-    # If folder doesn't exist, then create it.
-    if not path.exists('dataset'):
-        makedirs('dataset', exist_ok=True)
-
     if path.exists("./dataset/clean_data.csv") and path.exists("./dataset/final_data.csv"):
         return True
     else:
@@ -342,6 +338,10 @@ def home_page(clean_df, final_df, cluster_insights_df, cluster_names_dict):
 
 #====================================================== Main Driver Script ============================================================
 if __name__ == "__main__":
+    # If folder doesn't exist, then create it.
+    if not path.exists('dataset'):
+        makedirs('dataset', exist_ok=True)
+ 
     data_found = False
     # Check if dataset files are missing
     if check_dataset() == False:
