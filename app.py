@@ -190,16 +190,30 @@ def visualize_cluster(clean_df, final_df, selected_cluster, cluster_insights_df,
     
     # 2. End cluster columns insights dataframe
 
-    #3. Top 10 brought product
+    # 3. Geographical Insights
+    st.header('Geographical Insights:')
+    top_country = final_df[final_df['cluster'] == cluster_no].groupby('Country')['Monetary'].sum().sort_values(ascending=False)
+
+    labels = top_country[:5].index
+    size = top_country[:5].values
+
+    plt.figure(figsize=(10,7))
+    plt.pie(size, labels=labels, explode=[0.05]*5, autopct='%1.0f%%')
+    plt.title("Top 5 Countries by Total Sales", size=15)
+    plt.axis('equal')
+    st.pyplot()
+    # 3. End Geographical Insights
+
+    # 4. Top 10 brought product
     st.header('Top 10 products bought:')
     temp = pd.DataFrame(ith_cluster['Description'].value_counts()[:10])
     temp.columns = ['Quantity Purchased']
     temp.index.name = 'Products'
     temp.reset_index(inplace=True)
     st.table(temp)
-    #3. End top 10 brought product
+    # 4. End top 10 brought product
     
-    #4. Orders per month
+    # 5. Orders per month
     st.header('Seasonal Insights:')
     plt.figure(figsize = (10,7))
     n, bins, patches = plt.hist(ith_cluster['Month'], bins=12)
@@ -223,9 +237,9 @@ def visualize_cluster(clean_df, final_df, selected_cluster, cluster_insights_df,
             ha='center',
             va=va)
     st.pyplot()
-    #4. End orders per month
+    # 5. End orders per month
     
-    #5. Orders per hour
+    # 6. Orders per hour
     st.header('Hourly Usage Trends:')
     plt.figure(figsize = (10,7))
     n, bins, patches = plt.hist(ith_cluster['Hour'], bins=ith_cluster['Hour'].nunique())
@@ -249,13 +263,13 @@ def visualize_cluster(clean_df, final_df, selected_cluster, cluster_insights_df,
             ha='center',
             va=va)
     st.pyplot()
-    #5. End Orders per hour
+    # 6. End Orders per hour
 
-    # 6. Characteristics and Recommendations
+    # 7. Characteristics and Recommendations
     st.header('Miscellaneous:')
     image = Image.open('./static/img/'+selected_cluster+'.png')
     st.image(image, use_column_width=True)
-    # 6. Characteristics and Recommendations
+    # 7. Characteristics and Recommendations
 #============================================== End Visualize Insights based on Data Files ============================================
 #==================================================== End User defined functions ======================================================
 
